@@ -1,45 +1,43 @@
-import argparse
-import os
+#!/usr/bin/env python3
+# Sunstorm.py
+
+"""
+TODO:
+  - `from pyimg4 import IM4P`, use pyimg4 lib instead of calling the bin version
+  - Use RemoteZip to speed up having to download the full IPSW
+"""
+
 import sys
+import os
+import argparse
 import zipfile
-from utils.manifest import Manifest
-import utils.api
 import subprocess
 import shutil
+import atexit
+import tempfile
+import glob
 
-# os.chdir(os.path.dirname(sys.argv[0]))
+# Global variables
+ROOT = os.path.dirname(__file__)
+DEBUG = 0
+LINUX = (sys.platform == 'linux')
 
-#i stole this from sunst0rm uwu (maybe)
-def dependencies():
-    if not os.path.exists('/usr/local/bin/futurerestore'):
-        print('[!] futurerestore not found, please install it')
-        sys.exit(1)
+# Append PATH
+sys.path.append(ROOT + '/src')
+os.environ['PATH'] = ((ROOT + '/bin') + ':' + os.environ.get('PATH'))
 
-    if not os.path.exists('/usr/local/bin/img4tool'):
-        print('[!] img4tool not found, please install it')
-        sys.exit(1)
+# Custom util in /src
+from manifest import Manifest
+import api
 
-    if not os.path.exists('/usr/local/bin/img4'):
-        print('[!] img4 not found, please install it')
-        sys.exit(1)
-
-    if not os.path.exists('/usr/local/bin/Kernel64Patcher'):
-        print('[!] Kernel64Patcher not found, please install it')
-        sys.exit(1)
-
-    if not os.path.exists('/usr/local/bin/iBoot64Patcher'):
-        print('[!] iBoot64Patcher not found, please install it')
-        sys.exit(1)
-
-    if not os.path.exists('/usr/local/bin/ldid'):
-        print('[!] ldid not found, please install it')
-        sys.exit(1)
-
-    if not os.path.exists('/usr/local/bin/asr64_patcher'):
-        print('[!] asr64_patcher not found, please install it')
-        sys.exit(1)
-
-    if not os.path.exists('/usr/local/bin/restored_external64_patcher'):
-        print('[!] restored_external64_patcher not found, please install it')
-        sys.exit(1)
-
+program_list = [
+  'futurerestore',
+  'img4tool',
+  'Kernel64Patcher',
+  'iBoot64Patcher',
+  'ldid',
+  'asr64_patcher',
+  'restored_external64_patcher',
+  # `hfsplus` comes from libdmg-hfsplus
+  'hfsplus' if LINUX else 'hdiutil'
+]
